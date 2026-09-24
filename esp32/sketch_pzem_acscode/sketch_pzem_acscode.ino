@@ -14,7 +14,7 @@ const char* WIFI_PASSWORD = "varam123";
 // =====================================================
 
 const char* API_URL =
-  "https://YOUR-RENDER-APP.onrender.com/api/data";
+  "https://energy-changeover-dashboard.onrender.com/api/data";
 
 // =====================================================
 // PIN DEFINITIONS
