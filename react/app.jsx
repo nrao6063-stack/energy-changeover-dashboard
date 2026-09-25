@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 const API_URL =
-  "https://energy-changeover-dashboard.onrender.com/api/data";
+  "https://energy-changeover-flask.onrender.com/api/data";
 
 function App() {
   const [data, setData] = useState({
@@ -17,116 +17,57 @@ function App() {
     updated: null,
   });
 
-  const [error, setError] = useState("");
-
-  const getData = async () => {
-    try {
-      const response = await fetch(API_URL);
-
-      if (!response.ok) {
-        throw new Error("API connection failed");
-      }
-
-      const result = await response.json();
-      setData(result);
-      setError("");
-    } catch (err) {
-      console.error(err);
-      setError("Unable to connect to Flask API");
-    }
-  };
-
   useEffect(() => {
-    getData();
+    const fetchData = async () => {
+      try {
+        const response = await fetch(API_URL);
 
-    const interval = setInterval(getData, 3000);
+        if (!response.ok) {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        const result = await response.json();
+        setData(result);
+      } catch (error) {
+        console.error("Error fetching ESP32 data:", error);
+      }
+    };
+
+    fetchData();
+
+    const interval = setInterval(fetchData, 5000);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="dashboard">
-      <header className="header">
-        <h1>⚡ Energy Changeover Dashboard</h1>
-        <p>ESP32 • PZEM-004T • ACS712 • SSR</p>
-      </header>
+    <div>
+      <h1>⚡ Energy Changeover Dashboard</h1>
 
-      {error && <div className="error">{error}</div>}
+      <p>
+        System Status: <strong>{data.system_status}</strong>
+      </p>
 
-      <div className="status-card">
-        <span>System Status</span>
-        <strong>{data.system_status}</strong>
-      </div>
+      <p>Voltage: {Number(data.voltage).toFixed(1)} V</p>
 
-      <div className="cards">
+      <p>PZEM Current: {Number(data.pzem_current).toFixed(2)} A</p>
 
-        <div className="card">
-          <h2>Voltage</h2>
-          <div className="value">
-            {Number(data.voltage || 0).toFixed(1)}
-            <span> V</span>
-          </div>
-        </div>
+      <p>ACS712 Current: {Number(data.acs712_current).toFixed(2)} A</p>
 
-        <div className="card">
-          <h2>PZEM Current</h2>
-          <div className="value">
-            {Number(data.pzem_current || 0).toFixed(2)}
-            <span> A</span>
-          </div>
-        </div>
+      <p>Power: {Number(data.power).toFixed(1)} W</p>
 
-        <div className="card">
-          <h2>ACS712 Current</h2>
-          <div className="value">
-            {Number(data.acs712_current || 0).toFixed(2)}
-            <span> A</span>
-          </div>
-        </div>
+      <p>Energy: {Number(data.energy).toFixed(2)} kWh</p>
 
-        <div className="card">
-          <h2>Power</h2>
-          <div className="value">
-            {Number(data.power || 0).toFixed(1)}
-            <span> W</span>
-          </div>
-        </div>
+      <p>Frequency: {Number(data.frequency).toFixed(2)} Hz</p>
 
-        <div className="card">
-          <h2>Energy</h2>
-          <div className="value">
-            {Number(data.energy || 0).toFixed(2)}
-            <span> kWh</span>
-          </div>
-        </div>
+      <p>Power Factor: {Number(data.power_factor).toFixed(2)}</p>
 
-        <div className="card">
-          <h2>Frequency</h2>
-          <div className="value">
-            {Number(data.frequency || 0).toFixed(1)}
-            <span> Hz</span>
-          </div>
-        </div>
+      <p>
+        SSR:{" "}
+        <strong>{data.ssr ? "ON" : "OFF"}</strong>
+      </p>
 
-        <div className="card">
-          <h2>Power Factor</h2>
-          <div className="value">
-            {Number(data.power_factor || 0).toFixed(2)}
-          </div>
-        </div>
-
-        <div className="card">
-          <h2>SSR</h2>
-          <div className={data.ssr ? "ssr-on" : "ssr-off"}>
-            {data.ssr ? "ON" : "OFF"}
-          </div>
-        </div>
-
-      </div>
-
-      <div className="updated">
-        Last update: {data.updated || "Waiting for ESP32"}
-      </div>
+      <p>Last update: {data.updated || "Waiting for ESP32..."}</p>
     </div>
   );
 }
