@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from datetime import datetime,timezone
 
@@ -184,11 +184,7 @@ def get_data():
 
 @app.route("/", methods=["GET"])
 def home():
-
-    return jsonify({
-        "status": "online",
-        "message": "Energy Changeover Flask API is running"
-    })
+    return render_template("index.html")
 
 
 # =====================================================

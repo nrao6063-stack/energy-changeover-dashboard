@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Energy Changeover Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f5f9;
+            color: #222;
+        }
+
+        .header {
+            background: #111827;
+            color: white;
+            padding: 22px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1400px;
+            margin: 25px auto;
+        }
+
+        .status-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .status-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .status-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .status-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .connected,
+        .normal {
+            color: #16a34a;
+        }
+
+        .disconnected,
+        .warning {
+            color: #dc2626;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+            min-height: 130px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .value {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .unit {
+            font-size: 15px;
+            color: #666;
+            margin-left: 5px;
+        }
+
+        .refresh {
+            margin-top: 20px;
+            padding: 11px 22px;
+            border: none;
+            border-radius: 7px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .refresh:hover {
+            background: #1d4ed8;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: #777;
+            font-size: 13px;
+        }
+
+        @media (max-width: 1000px) {
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .status-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>⚡ Energy Changeover Dashboard</h1>
+        <p>ESP32 + PZEM + ACS712 + DHT11 + Vibration Monitoring</p>
+    </div>
+
+    <div class="container">
+
+        <!-- SYSTEM STATUS -->
+
+        <div class="status-row">
+
+            <div class="status-card">
+                <div class="status-title">
+                    ESP32 CONNECTION
+                </div>
+
+                <div id="espStatus"
+                     class="status-value disconnected">
+                    DISCONNECTED
+                </div>
+            </div>
+
+
+            <div class="status-card">
+                <div class="status-title">
+                    SYSTEM STATUS
+                </div>
+
+                <div id="systemStatus"
+                     class="status-value">
+                    --
+                </div>
+            </div>
+
+
+            <div class="status-card">
+                <div class="status-title">
+                    SSR STATUS
+                </div>
+
+                <div id="ssrStatus"
+                     class="status-value">
+                    --
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- SENSOR DATA -->
+
+        <div class="cards">
+
+            <!-- Voltage -->
+            <div class="card">
+                <div class="card-title">⚡ Voltage</div>
+
+                <div class="value">
+                    <span id="voltage">0</span>
+                    <span class="unit">V</span>
+                </div>
+            </div>
+
+
+            <!-- PZEM Current -->
+            <div class="card">
+                <div class="card-title">🔌 PZEM Current</div>
+
+                <div class="value">
+                    <span id="pzemCurrent">0</span>
+                    <span class="unit">A</span>
+                </div>
+            </div>
+
+
+            <!-- ACS712 -->
+            <div class="card">
+                <div class="card-title">🔌 ACS712 Current</div>
+
+                <div class="value">
+                    <span id="acsCurrent">0</span>
+                    <span class="unit">A</span>
+                </div>
+            </div>
+
+
+            <!-- Power -->
+            <div class="card">
+                <div class="card-title">💡 Power</div>
+
+                <div class="value">
+                    <span id="power">0</span>
+                    <span class="unit">W</span>
+                </div>
+            </div>
+
+
+            <!-- Energy -->
+            <div class="card">
+                <div class="card-title">🔋 Energy</div>
+
+                <div class="value">
+                    <span id="energy">0</span>
+                    <span class="unit">kWh</span>
+                </div>
+            </div>
+
+
+            <!-- Frequency -->
+            <div class="card">
+                <div class="card-title">📡 Frequency</div>
+
+                <div class="value">
+                    <span id="frequency">0</span>
+                    <span class="unit">Hz</span>
+                </div>
+            </div>
+
+
+            <!-- Power Factor -->
+            <div class="card">
+                <div class="card-title">📊 Power Factor</div>
+
+                <div class="value">
+                    <span id="pf">0</span>
+                </div>
+            </div>
+
+
+            <!-- Temperature -->
+            <div class="card">
+                <div class="card-title">🌡️ Temperature</div>
+
+                <div class="value">
+                    <span id="temperature">0</span>
+                    <span class="unit">°C</span>
+                </div>
+            </div>
+
+
+            <!-- Humidity -->
+            <div class="card">
+                <div class="card-title">💧 Humidity</div>
+
+                <div class="value">
+                    <span id="humidity">0</span>
+                    <span class="unit">%</span>
+                </div>
+            </div>
+
+
+            <!-- Vibration -->
+            <div class="card">
+                <div class="card-title">📳 Vibration</div>
+
+                <div id="vibration"
+                     class="value normal">
+                    NORMAL
+                </div>
+            </div>
+
+
+            <!-- Last Update -->
+            <div class="card">
+                <div class="card-title">🕒 Last Update</div>
+
+                <div id="lastUpdate"
+                     class="value"
+                     style="font-size:18px;">
+                    --
+                </div>
+            </div>
+
+        </div>
+
+
+        <button class="refresh" onclick="loadData()">
+            🔄 Refresh Now
+        </button>
+
+    </div>
+
+
+    <div class="footer">
+        Energy Changeover Monitoring System | ESP32 + Flask
+    </div>
+
+
+    <script>
+
+        // =========================================
+        // LOAD DATA FROM FLASK
+        // =========================================
+
+        async function loadData() {
+
+            try {
+
+                const response = await fetch("/api/data");
+
+                if (!response.ok) {
+                    throw new Error("API response error");
+                }
+
+                const data = await response.json();
+
+                console.log("Dashboard Data:", data);
+
+
+                // =========================================
+                // ELECTRICAL DATA
+                // =========================================
+
+                document.getElementById("voltage").innerText =
+                    Number(data.voltage || 0).toFixed(2);
+
+
+                document.getElementById("pzemCurrent").innerText =
+                    Number(data.pzem_current || 0).toFixed(3);
+
+
+                document.getElementById("acsCurrent").innerText =
+                    Number(data.acs712_current || 0).toFixed(3);
+
+
+                document.getElementById("power").innerText =
+                    Number(data.power || 0).toFixed(2);
+
+
+                document.getElementById("energy").innerText =
+                    Number(data.energy || 0).toFixed(3);
+
+
+                document.getElementById("frequency").innerText =
+                    Number(data.frequency || 0).toFixed(2);
+
+
+                document.getElementById("pf").innerText =
+                    Number(data.power_factor || 0).toFixed(2);
+
+
+                // =========================================
+                // TEMPERATURE
+                // =========================================
+
+                document.getElementById("temperature").innerText =
+                    Number(data.temp || 0).toFixed(1);
+
+
+                // =========================================
+                // HUMIDITY
+                // =========================================
+
+                document.getElementById("humidity").innerText =
+                    Number(data.humidity || 0).toFixed(1);
+
+
+                // =========================================
+                // VIBRATION
+                // =========================================
+
+                const vibration =
+                    String(data.vibration || "NORMAL");
+
+                const vibrationElement =
+                    document.getElementById("vibration");
+
+                vibrationElement.innerText = vibration;
+
+
+                if (vibration.toUpperCase() === "NORMAL") {
+
+                    vibrationElement.className =
+                        "value normal";
+
+                } else {
+
+                    vibrationElement.className =
+                        "value warning";
+                }
+
+
+                // =========================================
+                // SSR
+                // =========================================
+
+                const ssr =
+                    data.ssr === true ||
+                    data.ssr === "true" ||
+                    data.ssr === "ON" ||
+                    data.ssr === 1;
+
+
+                const ssrElement =
+                    document.getElementById("ssrStatus");
+
+
+                if (ssr) {
+
+                    ssrElement.innerText = "ON";
+
+                    ssrElement.className =
+                        "status-value connected";
+
+                } else {
+
+                    ssrElement.innerText = "OFF";
+
+                    ssrElement.className =
+                        "status-value disconnected";
+                }
+
+
+                // =========================================
+                // SYSTEM STATUS
+                // =========================================
+
+                const systemStatus =
+                    String(data.system_status || "NORMAL");
+
+                const systemElement =
+                    document.getElementById("systemStatus");
+
+                systemElement.innerText = systemStatus;
+
+
+                if (
+                    systemStatus
+                        .toUpperCase()
+                        .includes("CHANGEOVER")
+                ) {
+
+                    systemElement.className =
+                        "status-value warning";
+
+                } else {
+
+                    systemElement.className =
+                        "status-value normal";
+                }
+
+
+                // =========================================
+                // ESP32 CONNECTION
+                // =========================================
+
+                const espElement =
+                    document.getElementById("espStatus");
+
+
+                if (data.updated) {
+
+                    const updatedTime =
+                        new Date(data.updated);
+
+                    const now =
+                        new Date();
+
+                    const age =
+                        (now - updatedTime) / 1000;
+
+
+                    if (age <= 15) {
+
+                        espElement.innerText =
+                            "CONNECTED";
+
+                        espElement.className =
+                            "status-value connected";
+
+                    } else {
+
+                        espElement.innerText =
+                            "DISCONNECTED";
+
+                        espElement.className =
+                            "status-value disconnected";
+                    }
+
+
+                    document.getElementById("lastUpdate")
+                        .innerText =
+                        updatedTime.toLocaleTimeString();
+
+                } else {
+
+                    espElement.innerText =
+                        "DISCONNECTED";
+
+                    espElement.className =
+                        "status-value disconnected";
+
+                    document.getElementById("lastUpdate")
+                        .innerText = "--";
+                }
+
+
+            } catch (error) {
+
+                console.error(
+                    "Dashboard Error:",
+                    error
+                );
+
+                document.getElementById("espStatus")
+                    .innerText = "API ERROR";
+
+                document.getElementById("espStatus")
+                    .className =
+                    "status-value disconnected";
+            }
+        }
+
+
+        // =========================================
+        // FIRST LOAD
+        // =========================================
+
+        loadData();
+
+
+        // =========================================
+        // AUTO REFRESH EVERY 5 SECONDS
+        // =========================================
+
+        setInterval(loadData, 5000);
+
+    </script>
+
+</body>
+
+</html>
