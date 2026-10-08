@@ -332,9 +332,12 @@
         </div>
 
 
-        <button class="refresh" onclick="loadData()">
-            🔄 Refresh Now
-        </button>
+        <button class="refresh" id="refreshButton" type="button">
+  🔄 Refresh Now
+</button>
+document
+  .getElementById("refreshButton")
+  .addEventListener("click", loadData);
 
     </div>
 
