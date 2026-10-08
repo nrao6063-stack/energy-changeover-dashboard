@@ -144,8 +144,8 @@ def receive_data():
         # =================================================
 
         latest_data["updated"] = (
-            datetime.now().isoformat()
-        )
+    datetime.now(timezone.utc).isoformat()
+)
 
         print()
         print("STORED DATA:")

@@ -354,7 +354,9 @@
 
             try {
 
-                const response = await fetch("/api/data");
+                const response = await fetch("/api/data?t=" + Date.now(), {
+    cache: "no-store"
+});
 
                 if (!response.ok) {
                     throw new Error("API response error");
@@ -518,7 +520,7 @@
                         (now - updatedTime) / 1000;
 
 
-                    if (age <= 60) {
+                    if (age <= 15) {
 
                         espElement.innerText =
                             "CONNECTED";
