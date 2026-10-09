@@ -332,12 +332,15 @@
         </div>
 
 
-        <button class="refresh" id="refreshButton" type="button">
+        
+
+<button
+id="refreshButton"
+  class="refresh"
+  type="button"
+  onclick="loadData()">
   🔄 Refresh Now
 </button>
-document
-  .getElementById("refreshButton")
-  .addEventListener("click", loadData);
 
     </div>
 
@@ -354,20 +357,21 @@ document
         // =========================================
 
         async function loadData() {
+    try {
+        const response = await fetch(
+            "/api/data?t=" + Date.now(),
+            {
+                cache: "no-store"
+            }
+        );
 
-            try {
+        if (!response.ok) {
+            throw new Error("API response error");
+        }
 
-                const response = await fetch("/api/data?t=" + Date.now(), {
-    cache: "no-store"
-});
+        const data = await response.json();
 
-                if (!response.ok) {
-                    throw new Error("API response error");
-                }
-
-                const data = await response.json();
-
-                console.log("Dashboard Data:", data);
+        console.log("Dashboard Data:", data);
 
 
                 // =========================================
@@ -579,7 +583,7 @@ document
         // FIRST LOAD
         // =========================================
 
-        loadData();
+        
 
 
         // =========================================
@@ -587,7 +591,7 @@ document
         // =========================================
 
         setInterval(loadData, 5000);
-
+        loadData();
     </script>
 
 </body>
